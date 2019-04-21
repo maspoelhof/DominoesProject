@@ -78,13 +78,19 @@ public class Table {
 
     if (this.debug) System.out.println("Head: "+this.head+" Tail: "+this.tail);
 
+    /////////////////////////////
+    // Get hand of the player  //
+    /////////////////////////////
     ArrayList<Domino> hand = players[turn].getHand();
     Domino highValDom = null;
     int highestVal = -1;
 
     boolean playable = false;
 
-    //check eligible pieces
+    ///////////////////////////////////////////////////////
+    // Check for eligible pieces in players hand         //
+    // Only cares about the piece with the highest value //
+    ///////////////////////////////////////////////////////
     for (int i = 0; i<hand.size(); i++){
       Domino d = hand.get(i);
       int left = d.getLeft();
@@ -99,14 +105,19 @@ public class Table {
       }
     }
 
+    /////////////////////////////////////////////////
+    // If there is not a valid piece in hand, draw //
+    /////////////////////////////////////////////////
     while (!playable && !this.isEmpty){
-      if (this.debug) System.out.println("hey");
+      if (this.debug) System.out.println("Player "+(this.turn+1)+" has to draw");
       draw(players[this.turn]);
 
+      //Gets the piece that was recently drawn
       Domino d = hand.get(hand.size()-1);
       int left = d.getLeft();
       int right = d.getRight();
 
+      //and checks if it can be played
       if(left == this.head || left == this.tail || right == this.head || right == this.tail){
         playable = true;
         highValDom = d;
@@ -115,29 +126,37 @@ public class Table {
 
     //Can't play and can't draw
     if (!playable) {
-      if (debug) System.out.println("hey");
+      if (debug) System.out.println("Player "+(this.turn+1)+" cannot play");
       this.failedRounds++;
       this.turn = (this.turn+1)%this.numPlayers;
       return false;
     }
 
-    // play highest value domino
+    /////////////////////////////////////////
+    // place highest value domino on board //
+    /////////////////////////////////////////
     else {
       if (debug) System.out.println("Player "+this.turn+" can play");
       if (debug) System.out.println(highValDom.toString());
       this.failedRounds = 0;
+
+      //Play piece on head without rotate
       if (highValDom.getRight() == this.head){
         if (debug) System.out.println("Play piece on head without rotate");
         this.played.addFirst(highValDom);
         this.head = highValDom.getLeft();
         players[this.turn].pop(highValDom);
       }
+
+      //Play piece on tail without rotate
       else if (highValDom.getLeft() == this.tail){
         if (debug) System.out.println("Play piece on tail without rotate");
         this.played.addLast(highValDom);
         this.tail = highValDom.getRight();
         players[this.turn].pop(highValDom);
       }
+
+      //Play piece on head after roate
       else if (highValDom.getLeft() == this.head) {
         if (debug) System.out.println("Play piece on head after roate");
         highValDom.rotate();
@@ -145,6 +164,8 @@ public class Table {
         this.head = highValDom.getLeft();
         players[this.turn].pop(highValDom);
       }
+
+      //Play piece on tail after rotate
       else if (highValDom.getRight() == this.tail){
         if (debug) System.out.println("Play piece on tail after rotate");
         highValDom.rotate();
@@ -152,12 +173,16 @@ public class Table {
         this.tail = highValDom.getRight();
         players[this.turn].pop(highValDom);
       }
+
+      //Check if player is a winner by checking if hand is empty
       if (players[this.turn].isWinner()){
         if(debug) System.out.println(this.turn+" is the winner!");
         this.winner = players[this.turn];
         return true;
       }
     }
+
+    //return false because a winner was not found, increment turn
     if (debug) System.out.println("Player "+this.turn+" played but isn't a winner");
     this.turn = (this.turn+1)%this.numPlayers;
     return false;
