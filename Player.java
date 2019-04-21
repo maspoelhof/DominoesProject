@@ -83,7 +83,7 @@ public class Player {
   // toString used for debugging //
   /////////////////////////////////
 
-  public void printHand()
+  public void printHand(){
     for (int i = 0; i < hand.size(); i++){
       System.out.print(hand.get(i).toString()+" ");
     }
