@@ -77,6 +77,7 @@ public class Table {
   public boolean play(){
 
     if (this.debug) System.out.println("Head: "+this.head+" Tail: "+this.tail);
+    if (this.debug) System.out.println("Head: "+played.peekFirst()+" Tail: "+played.peekLast());
 
     /////////////////////////////
     // Get hand of the player  //
@@ -145,6 +146,7 @@ public class Table {
         if (debug) System.out.println("Play piece on head without rotate");
         this.played.addFirst(highValDom);
         this.head = highValDom.getLeft();
+        if (this.debug) System.out.println("The new Head is: "+this.head+" and Tail is: "+this.tail);
         players[this.turn].pop(highValDom);
       }
 
@@ -153,15 +155,17 @@ public class Table {
         if (debug) System.out.println("Play piece on tail without rotate");
         this.played.addLast(highValDom);
         this.tail = highValDom.getRight();
+        if (this.debug) System.out.println("Head is: "+this.head+" and the new Tail is: "+this.tail);
         players[this.turn].pop(highValDom);
       }
 
-      //Play piece on head after roate
+      //Play piece on head after rotate
       else if (highValDom.getLeft() == this.head) {
-        if (debug) System.out.println("Play piece on head after roate");
+        if (debug) System.out.println("Play piece on head after rotate");
         highValDom.rotate();
         this.played.addFirst(highValDom);
         this.head = highValDom.getLeft();
+        if (this.debug) System.out.println("The new Head is: "+this.head+" and Tail is: "+this.tail);
         players[this.turn].pop(highValDom);
       }
 
@@ -171,19 +175,20 @@ public class Table {
         highValDom.rotate();
         this.played.addLast(highValDom);
         this.tail = highValDom.getRight();
+        if (this.debug) System.out.println("Head is: "+this.head+" and the new Tail is: "+this.tail);
         players[this.turn].pop(highValDom);
       }
 
       //Check if player is a winner by checking if hand is empty
       if (players[this.turn].isWinner()){
-        if(debug) System.out.println(this.turn+" is the winner!");
+        if(debug) System.out.println((this.turn+1)+" is the winner!");
         this.winner = players[this.turn];
         return true;
       }
     }
 
     //return false because a winner was not found, increment turn
-    if (debug) System.out.println("Player "+this.turn+" played but isn't a winner");
+    if (debug) System.out.println("Player "+(this.turn+1)+" played but isn't a winner");
     this.turn = (this.turn+1)%this.numPlayers;
     return false;
   }
@@ -204,8 +209,8 @@ public class Table {
   /////////////////////////////
 
   public void printTable(){
-    for (int i = 0; i < this.played.size(); i++){
-      System.out.print(this.played.poll().toString()+" | ");
+    while (!this.played.isEmpty()){
+     System.out.print(this.played.poll().toString()+" | ");
     }
   }
 
@@ -231,8 +236,6 @@ public class Table {
    * of the hash map. It then gives that domino object to the player  *
    ********************************************************************/
 
-
-  //this feels like a fucking hack but i think its kinda good
   private void createDominos(){
     for (int i = 0, k = 1; i<7; i++){
       for (int j = i; j>=0; j--, k++){
