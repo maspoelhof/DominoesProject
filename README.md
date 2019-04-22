@@ -1,4 +1,4 @@
-# DominoesProject
+# Dominos Project
 Project 1 - Software Engineering
 
 This project is for CS380
