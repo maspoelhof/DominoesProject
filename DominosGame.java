@@ -1,23 +1,11 @@
-/*
-Main
-
-Output to user:
-# of players (2-4)
-Anonymous or Public? (Y/N)
-If Yes: Name Players
-Print Settings
-Press 1 to play, 0 to change settings
-
-Create Player Objects
-Determine first play based on hand size
-Play first tile from player (Double)
-while Winner=False, play
-Iterate through players playing one piece
-If they can't play, skip
-When winner is returned, rank based on hand size
-Output results
-
-Play again?
+/**
+ * Main Class
+ *
+ * Holds default variables
+ * Allows for user to change settings
+ *
+ * While loop that runs until a winner is found
+ * Or until no one can play
 */
 
 import java.util.*;
@@ -40,7 +28,6 @@ public class DominosGame {
     boolean winnerFound = false;
     Player winningPlayer = null;
 
-
     Scanner s = new Scanner(System.in);
 
     //////////////////////
@@ -51,7 +38,6 @@ public class DominosGame {
     int debugChoice = s.nextInt();
 
     if (debugChoice == 1){
-      System.out.println("hey");
       debug = true;
     }
 
@@ -60,7 +46,7 @@ public class DominosGame {
     ////////////////////////////////////////////
 
 
-/*
+
     System.out.println("------Welcome to our Dominos Game!------");
 
     //TODO
@@ -78,17 +64,17 @@ public class DominosGame {
       named = true;
 
       System.out.println("Excellent choice! Let's give our players some names!");
-      System.out.print("What is the name of our first player?: ");
-      String player1Name = s.nextLine();
-      System.out.print("And who is "+player1Name+" playing against?: ");
-      String player2Name = s.nextLine();
+      s.nextLine();
 
+      for (int i = 0; i < numPlayers; i++){
+        System.out.print("What are the names of our "+numPlayers+" players?: ");
+        names[i] = s.nextLine();
+      }
+      System.out.println(Arrays.toString(names));
+    }
 
-    }
-    else{
-      System.out.println("Secrecy is fun too!");
-    }
-*/
+    else System.out.println("Secrecy is fun too!");
+
     s.close();
 
     ///////////////////////////
@@ -98,8 +84,7 @@ public class DominosGame {
     System.out.println("\n\nNow that we're done with that, let's get started!");
 
     for (int i = 0; i < numPlayers; i++){
-      //Player p = (named) ? new Player(i, names[i]) : new Player(i);
-      Player p = new Player(i);
+      Player p = (named) ? new Player(i+1, names[i]) : new Player(i+1);
       players[i] = p;
     }
 
@@ -107,19 +92,19 @@ public class DominosGame {
     // Create Table Object //
     /////////////////////////
 
-    System.out.println("Let's head over to the Table, right this way");
+    System.out.println("Let's head over to the Table, right this way\n");
     Table table1 = new Table(players, handSize, debug);
 
     if (debug){
-      System.out.println("Player 1 was given the hand: ");
-      players[0].printHand();
-
-      System.out.println("Player 2 was given the hand: ");
-      players[1].printHand();
+      for (int i = 0; i < numPlayers; i++){
+        System.out.println(players[i]+" was given the hand: ");
+        players[i].printHand();
+      }
     }
 
-    System.out.println("Player "+table1.turn+" will go first!");
-
+    System.out.println("We will start the game by flipping a domino from the pile");
+    table1.playFirst();
+    System.out.println();
 
     //////////////////
     //Play the game //
@@ -135,15 +120,16 @@ public class DominosGame {
 
     while (!winnerFound){
 
-      if (debug){
-        System.out.println("It is player "+(table1.turn+1)+"'s turn and their hand is: ");
-        players[table1.turn].printHand();
-        System.out.println();
-      }
+      System.out.println("-----------------------------------------------------------");
+      System.out.println("It is "+players[table1.turn].getName()+"'s turn and their hand is: ");
+      System.out.println("-----------------------------------------------------------\n");
+      players[table1.turn].printHand();
+      System.out.println();
 
       //If both players failed to play on consecutive plays
       if (table1.failedRounds >= numPlayers){
-        System.out.println("Player 1 and Player 2 are out of possible moves");
+        boolean tie = false;
+        System.out.println(players[0]+" and "+players[1]+" are out of possible moves");
 
         if (debug){
           System.out.println("Player 1's ending hand is: ");
@@ -154,26 +140,29 @@ public class DominosGame {
 
         //Calculate winner by adding up the totals
 
-        if (players[0].getSum() < players[1].getSum()){
-          winningPlayer = players[0];
-          winnerFound = true;
+        for (int i = 0; i < numPlayers; i++){
+          if (winningPlayer == null){
+            winningPlayer = players[i];
+            winnerFound = true;
+          }
+          if (players[i].getSum() > winningPlayer.getSum()){
+            winningPlayer = players[i];
+            tie = false;
+            winnerFound = true;
+          }
+          else if (winningPlayer.getSum() == players[i].getSum()) tie = true;
         }
-        else if (players[0].getSum() > players[1].getSum()){
-          winningPlayer = players[1];
-          winnerFound = true;
-        }
-        else System.out.println("We have...a tie");
-        break;
+        if (tie) System.out.println("It's a....tie");
       }
       else winnerFound = table1.play();
-      if (winnerFound) winningPlayer = table1.winner;
+      if (winnerFound && winningPlayer == null) winningPlayer = table1.winner;
     }
 
     //Output winner if there is one (Not a tie)
     //TODO Output Winner is a better way
     if (winnerFound){
       System.out.println("And the winner is.....");
-      System.out.println("Player "+winningPlayer.getNum()+"!!!");
+      System.out.println(winningPlayer.getName()+"!!!");
       System.out.println("The point totals are: ");
       System.out.println(players[0].getSum()+" and "+players[1].getSum());
       if (debug) table1.printTable();
