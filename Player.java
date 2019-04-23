@@ -54,9 +54,9 @@ public class Player {
    * Create Playe object without a name
    * @param n {int} number of player
    */
-  public Player(int n){
+  public Player(int r){
     this.num = n;
-    this.name = "Player "+n;
+    this.name = "Player "+r;
   }
 
   /////////////

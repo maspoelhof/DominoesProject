@@ -137,23 +137,24 @@ public class DominosGame {
           System.out.println("\nPlayer 2's ending hand is: ");
           players[1].printHand();
         }
+      }
 
         //Calculate winner by adding up the totals
-
-        for (int i = 0; i < numPlayers; i++){
-          if (winningPlayer == null){
-            winningPlayer = players[i];
-            winnerFound = true;
+        if (winnerFound){
+          for (int i = 0; i < numPlayers; i++){
+            if (winningPlayer == null){
+              winningPlayer = players[i];
+              winnerFound = true;
+            }
+            if (players[i].getSum() > winningPlayer.getSum()){
+              winningPlayer = players[i];
+              tie = false;
+              winnerFound = true;
+            }
+            else if (winningPlayer.getSum() == players[i].getSum()) tie = true;
           }
-          if (players[i].getSum() > winningPlayer.getSum()){
-            winningPlayer = players[i];
-            tie = false;
-            winnerFound = true;
+          if (tie) System.out.println("It's a....tie");
           }
-          else if (winningPlayer.getSum() == players[i].getSum()) tie = true;
-        }
-        if (tie) System.out.println("It's a....tie");
-      }
       else winnerFound = table1.play();
       if (winnerFound && winningPlayer == null) winningPlayer = table1.winner;
     }
