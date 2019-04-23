@@ -1,13 +1,21 @@
-/****************************************
-* Create Pieces, store them in an array *
-* Pass out the pieces to the players    *
-*                                       *
-* linked list of played pieces          *
-*                                       *
-* TODO -                                *
-* Deconstructor                         *
-* Clean up                              *
-****************************************/
+/********************************************************
+ * Table object that holds the player object,           *
+ * domino pile, and simulates the gameplay              *
+ *                                                      *
+ * Constructors -                                       *
+ * Table(Player[] players, int handSize, boolean debug) *
+ *                                                      *
+ * Builders -                                           *
+ * createDominos()                                      *
+ * randomize()                                          *
+ * distributeDominos()                                  *
+ *                                                      *
+ * play()                                               *
+ *                                                      *
+ * TODO -                                               *
+ * Deconstructor                                        *
+ ********************************************************/
+
 
 
 import java.util.*;
@@ -26,8 +34,7 @@ public class Table {
   private HashMap<String, Domino> pile = new HashMap<String, Domino>();
   private boolean isEmpty = false;
   private Deque <Domino> played = new LinkedList<Domino>();
-  private int head;
-  private int tail;
+  private ArrayList<Domino> validDominos = new ArrayList<Domino>();
 
   /////////////////////////////////////////////
   // Players and relevant info at the table  //
@@ -53,6 +60,16 @@ public class Table {
   // Constructor //
   /////////////////
 
+  /**
+   * Builds table object
+   * @param players  {int[]} Array of player objects
+   * @param handSize {handSize} Size of hand for each player
+   * @param this.debug    {boolean} this.debug
+   *
+   * creates domino objects
+   * creates randomized counter
+   * gives players hands
+   */
   public Table(Player[] players, int handSize, boolean debug){
     this.numPlayers = players.length;
     this.players = players;
@@ -66,6 +83,19 @@ public class Table {
     distributeDominos();
   }
 
+  /**
+   * Flip over a random domino from the pile
+   *
+   * Used to start the game
+  */
+  public void playFirst(){
+    Domino drawnDomino = draw();
+    played.addFirst(drawnDomino);
+    validDominos.add(drawnDomino);
+    System.out.println("The first domino that was played was "+drawnDomino.toString());
+    System.out.println("Let's get play!");
+  }
+
   //////////////////////////////
   // Driver for the gameplay  //
   //////////////////////////////
@@ -73,122 +103,181 @@ public class Table {
   /**
    * Play round of Dominos game
    * @return {boolean} if a winner was found
+   *
+   * Tries to place a domino on the head or tail of current train
+   * Draws from pile if the player has no eligible dominos
+   * Counter failedRounds keeps track of rounds where no one was able to play
    */
   public boolean play(){
 
-    if (this.debug) System.out.println("Head: "+this.head+" Tail: "+this.tail);
     if (this.debug) System.out.println("Head: "+played.peekFirst()+" Tail: "+played.peekLast());
 
-    /////////////////////////////
-    // Get hand of the player  //
-    /////////////////////////////
+    //Get hand of the player
     ArrayList<Domino> hand = players[turn].getHand();
-    Domino highValDom = null;
-    int highestVal = -1;
+
+    HashMap<Integer,Domino> playableDominos = new HashMap<Integer,Domino>();
 
     boolean playable = false;
+    int validDominoIndex = 0;
 
-    ///////////////////////////////////////////////////////
-    // Check for eligible pieces in players hand         //
-    // Only cares about the piece with the highest value //
-    ///////////////////////////////////////////////////////
+    //Check for eligible pieces in players hand
     for (int i = 0; i<hand.size(); i++){
-      Domino d = hand.get(i);
-      int left = d.getLeft();
-      int right = d.getRight();
 
-      if (left == this.head || left == this.tail || right == this.head || right == this.tail){
-        if (left+right>highestVal){
+      Domino d = hand.get(i);
+
+      for (int j = 0; j < validDominos.size(); j++){
+
+        Domino c = validDominos.get(j);
+
+        if (this.debug) System.out.println("Testing if "+d.toStringL()+" can connect to "+c.toStringL());
+
+        if (d.connectable(c)){
+
+          playableDominos.put(validDominoIndex++,d);
+
+          if (this.debug) System.out.println("Valid Connections for the players Domino: "+d.toString()+" and "
+            +c.toString()+" are "+d.validConnections(c).toString());
+
           playable = true;
-          highValDom = d;
-          highestVal = left+right;
+          break;
         }
       }
     }
 
-    /////////////////////////////////////////////////
-    // If there is not a valid piece in hand, draw //
-    /////////////////////////////////////////////////
+    //If there is not a valid piece in hand, draw
     while (!playable && !this.isEmpty){
-      if (this.debug) System.out.println("Player "+(this.turn+1)+" has to draw");
-      draw(players[this.turn]);
 
-      //Gets the piece that was recently drawn
-      Domino d = hand.get(hand.size()-1);
-      int left = d.getLeft();
-      int right = d.getRight();
+      System.out.println(players[this.turn].getName()+" has to draw");
 
-      //and checks if it can be played
-      if(left == this.head || left == this.tail || right == this.head || right == this.tail){
-        playable = true;
-        highValDom = d;
+      Domino d = draw();
+      players[this.turn].addHand(d);
+      System.out.println(players[this.turn].getName()+" drew "+d.toString());
+
+      // checks if d can be played
+      for (int i = 0; i < validDominos.size(); i++){
+
+        Domino c = validDominos.get(i);
+
+        if (this.debug) System.out.println("Testing if "+d.toStringL()+" can connect to "+c.toStringL());
+
+        if (d.connectable(c)){
+
+          playableDominos.put(validDominoIndex++,d);
+
+          if (this.debug) System.out.println("Valid Connections for the players Domino: "+d.toString()+" and "
+            +c.toString()+" are "+d.validConnections(c).toString());
+
+          playable = true;
+          break;
+        }
       }
     }
 
     //Can't play and can't draw
     if (!playable) {
-      if (debug) System.out.println("Player "+(this.turn+1)+" cannot play");
+      System.out.println(players[this.turn].getName()+" cannot play");
+
       this.failedRounds++;
+
       this.turn = (this.turn+1)%this.numPlayers;
+
       return false;
     }
 
-    /////////////////////////////////////////
-    // place highest value domino on board //
-    /////////////////////////////////////////
+    //Plays Domino on Board
     else {
-      if (debug) System.out.println("Player "+this.turn+" can play");
-      if (debug) System.out.println(highValDom.toString());
+
+      System.out.println("Valid Dominos in "+players[this.turn].getName()+"'s hand are: \n"+playableDominos.toString());
+
       this.failedRounds = 0;
 
-      //Play piece on head without rotate
-      if (highValDom.getRight() == this.head){
-        if (debug) System.out.println("Play piece on head without rotate");
-        this.played.addFirst(highValDom);
-        this.head = highValDom.getLeft();
-        if (this.debug) System.out.println("The new Head is: "+this.head+" and Tail is: "+this.tail);
-        players[this.turn].pop(highValDom);
-      }
+      int dominoPicker = (int)(Math.random()*(playableDominos.size()));
 
-      //Play piece on tail without rotate
-      else if (highValDom.getLeft() == this.tail){
-        if (debug) System.out.println("Play piece on tail without rotate");
-        this.played.addLast(highValDom);
-        this.tail = highValDom.getRight();
-        if (this.debug) System.out.println("Head is: "+this.head+" and the new Tail is: "+this.tail);
-        players[this.turn].pop(highValDom);
-      }
+      Domino toPlay = playableDominos.get(dominoPicker);
+      System.out.println(players[this.turn].getName()+" is going to play: "+toPlay.toString());
 
-      //Play piece on head after rotate
-      else if (highValDom.getLeft() == this.head) {
-        if (debug) System.out.println("Play piece on head after rotate");
-        highValDom.rotate();
-        this.played.addFirst(highValDom);
-        this.head = highValDom.getLeft();
-        if (this.debug) System.out.println("The new Head is: "+this.head+" and Tail is: "+this.tail);
-        players[this.turn].pop(highValDom);
-      }
+      for (int i = 0; i < validDominos.size(); i++){
 
-      //Play piece on tail after rotate
-      else if (highValDom.getRight() == this.tail){
-        if (debug) System.out.println("Play piece on tail after rotate");
-        highValDom.rotate();
-        this.played.addLast(highValDom);
-        this.tail = highValDom.getRight();
-        if (this.debug) System.out.println("Head is: "+this.head+" and the new Tail is: "+this.tail);
-        players[this.turn].pop(highValDom);
+        Domino connectTo = validDominos.get(i);
+
+        if (toPlay.connectable(connectTo)){
+
+          int position = toPlay.validConnections(connectTo).get(0);
+
+          if (this.debug) System.out.println("Playable Location: "+position);
+
+          switch(position){
+
+            //Play piece on head without rotate
+            case 1:
+              if (this.debug) System.out.println("Play piece on the left of "+connectTo.toString()+" without rotate");
+              this.played.addFirst(toPlay); //TODO
+              validDominos.add(toPlay);
+              if (this.debug) System.out.println(toPlay.toString()+" was added to the list of Valid Dominos");
+              players[this.turn].pop(toPlay);
+              toPlay.connectSide(1);
+              connectTo.connectSide(0);
+              if (!connectTo.isValid()) validDominos.remove(connectTo);
+              break;
+
+            //Play piece on head with rotate
+            case 2:
+              if (this.debug) System.out.println("Play piece on the left of "+connectTo.toString()+" with rotate");
+              toPlay.rotate();
+              this.played.addFirst(toPlay); //TODO
+              validDominos.add(toPlay);
+              if (this.debug) System.out.println(toPlay.toString()+" was added to the list of Valid Dominos");
+              players[this.turn].pop(toPlay);
+              toPlay.connectSide(1);
+              connectTo.connectSide(0);
+              if (!connectTo.isValid()) validDominos.remove(connectTo);
+              break;
+
+            //Play piece on tail without rotate
+            case 3:
+              if (this.debug) System.out.println("Play piece on the right of "+connectTo.toString()+" without rotate");
+              this.played.addLast(toPlay); //TODO
+              validDominos.add(toPlay);
+              if (this.debug) System.out.println(toPlay.toString()+" was added to the list of Valid Dominos");
+              players[this.turn].pop(toPlay);
+              toPlay.connectSide(0);
+              connectTo.connectSide(1);
+              if (!connectTo.isValid()) validDominos.remove(connectTo);
+              break;
+
+            //Play piece on tail with rotate
+            case 4:
+              if (this.debug) System.out.println("Play piece on the right of "+connectTo.toString()+" with rotate");
+              toPlay.rotate();
+              this.played.addLast(toPlay); //TODO
+              validDominos.add(toPlay);
+              if (this.debug) System.out.println(toPlay.toString()+" was added to the list of Valid Dominos");
+              players[this.turn].pop(toPlay);
+              toPlay.connectSide(0);
+              connectTo.connectSide(1);
+              if (!connectTo.isValid()) validDominos.remove(connectTo);
+              break;
+
+          }
+          System.out.println("The list of valid Dominos is now: ");
+          for (int j = 0;j<validDominos.size();j++) {
+            System.out.print(" "+validDominos.get(j).toString());
+          }
+          System.out.println();
+          break;
+        }
       }
 
       //Check if player is a winner by checking if hand is empty
       if (players[this.turn].isWinner()){
-        if(debug) System.out.println((this.turn+1)+" is the winner!");
+        if(this.debug) System.out.println(players[this.turn].getName()+" is the winner!");
         this.winner = players[this.turn];
         return true;
       }
     }
 
     //return false because a winner was not found, increment turn
-    if (debug) System.out.println("Player "+(this.turn+1)+" played but isn't a winner");
+    if (this.debug) System.out.println(players[this.turn].getName()+" played but isn't a winner");
     this.turn = (this.turn+1)%this.numPlayers;
     return false;
   }
@@ -197,18 +286,30 @@ public class Table {
   // Draw method  //
   //////////////////
 
-  private void draw(Player p){
+  /**
+   * Receives a player object and gives that player a domino from the pile
+   * @return d {Domino} Domino that was drawn from pile
+   */
+  private Domino draw(){
     Domino d = this.pile.get("d"+this.randOrder.get(this.j++));
     d.setState(this.turn);
-    players[this.turn].addHand(d);
-    if (this.j >= 27) this.isEmpty = true;
+    if (this.j >= 27){
+       this.isEmpty = true;
+       System.out.println("The pile is now empty");
+     }
+    return d;
   }
 
   /////////////////////////////
   // toString for debugging  //
   /////////////////////////////
 
+  /**
+   * Print the final state of the board.
+   * Only call at the end of the game
+   */
   public void printTable(){
+    System.out.print("| ");
     while (!this.played.isEmpty()){
      System.out.print(this.played.poll().toString()+" | ");
     }
@@ -236,6 +337,9 @@ public class Table {
    * of the hash map. It then gives that domino object to the player  *
    ********************************************************************/
 
+   /**
+    * Create 28 domino objects
+    */
   private void createDominos(){
     for (int i = 0, k = 1; i<7; i++){
       for (int j = i; j>=0; j--, k++){
@@ -244,6 +348,9 @@ public class Table {
     }
   }
 
+  /**
+   * Creates a size 28 ArrayList then shuffles it to simulate randomness
+   */
   private void randomize(){
     this.randOrder = new ArrayList<Integer>(28);
     for (int i = 0; i < 28; i++){
@@ -253,6 +360,9 @@ public class Table {
     this.j = 0;
   }
 
+  /**
+   * Gives each player object a hand of handSize size
+   */
   private void distributeDominos(){
     for (int i = 0; i<players.length; i++){
       ArrayList<Domino> hand = new ArrayList<Domino>();
