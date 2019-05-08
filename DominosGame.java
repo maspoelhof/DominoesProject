@@ -96,9 +96,9 @@ public class DominosGame {
     Table table1 = new Table(players, handSize, debug);
 
     if (debug){
-      for (int i = 0; i < numPlayers; i++){
-        System.out.println(players[i].getName()+" was given the hand: ");
-        players[i].printHand();
+      for (int j = 0; j < numPlayers; j++){
+        System.out.println(players[j].getName()+" was given the hand: ");
+        players[j].printHand();
       }
     }
 
