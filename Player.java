@@ -55,7 +55,6 @@ public class Player {
    * @param n {int} number of player
    */
   public Player(int r){
-    this.num = n;
     this.name = "Player "+r;
   }
 

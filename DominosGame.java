@@ -97,7 +97,7 @@ public class DominosGame {
 
     if (debug){
       for (int i = 0; i < numPlayers; i++){
-        System.out.println(players[i]+" was given the hand: ");
+        System.out.println(players[i].getName()+" was given the hand: ");
         players[i].printHand();
       }
     }
@@ -129,32 +129,32 @@ public class DominosGame {
       //If both players failed to play on consecutive plays
       if (table1.failedRounds >= numPlayers){
         boolean tie = false;
-        System.out.println(players[0]+" and "+players[1]+" are out of possible moves");
+        System.out.println(players[0].getName()+" and "+players[1].getName()+" are out of possible moves");
 
         if (debug){
-          System.out.println("Player 1's ending hand is: ");
-          players[0].printHand();
-          System.out.println("\nPlayer 2's ending hand is: ");
-          players[1].printHand();
+          for (int i = 0;i < numPlayers; i++){
+            System.out.println(players[i].getName()+"'s ending hand is: ");
+            players[i].printHand();
+          }
         }
-      }
 
         //Calculate winner by adding up the totals
-        if (winnerFound){
-          for (int i = 0; i < numPlayers; i++){
-            if (winningPlayer == null){
-              winningPlayer = players[i];
-              winnerFound = true;
-            }
-            if (players[i].getSum() > winningPlayer.getSum()){
-              winningPlayer = players[i];
-              tie = false;
-              winnerFound = true;
-            }
-            else if (winningPlayer.getSum() == players[i].getSum()) tie = true;
+
+        for (int i = 0; i < numPlayers; i++){
+          if (winningPlayer == null){
+            winningPlayer = players[i];
+            winnerFound = true;
           }
-          if (tie) System.out.println("It's a....tie");
+          else if (players[i].getSum() < winningPlayer.getSum()){
+            if (debug) System.out.println(players[i].getSum()+ " is less than than "+winningPlayer.getSum());
+            winningPlayer = players[i];
+            tie = false;
+            winnerFound = true;
           }
+          else if (winningPlayer.getSum() == players[i].getSum()) tie = true;
+        }
+        if (tie) System.out.println("It's a....tie!");
+      }
       else winnerFound = table1.play();
       if (winnerFound && winningPlayer == null) winningPlayer = table1.winner;
     }

@@ -93,7 +93,7 @@ public class Table {
     played.addFirst(drawnDomino);
     validDominos.add(drawnDomino);
     System.out.println("The first domino that was played was "+drawnDomino.toString());
-    System.out.println("Let's get play!");
+    System.out.println("Let's start playing!");
   }
 
   //////////////////////////////
